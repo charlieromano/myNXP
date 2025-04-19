@@ -1,0 +1,55 @@
+# --- IDE / Editor configs ---
+.vscode/
+*.code-workspace
+*.mex  # MCUXpresso config tool project files
+
+# --- CMake files ---
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# --- Build folders ---
+debug/
+release/
+out/
+*.elf
+*.bin
+*.hex
+*.map
+*.srec
+*.out
+
+# --- Object and dependency files ---
+*.o
+*.d
+*.lst
+*.a
+*.lib
+*.su
+
+# --- Backup / temp files ---
+*.log
+*.swp
+*.tmp
+*.bak
+*.orig
+*~
+
+# --- Optional SDK autogen folders ---
+# Comment out if you manually edit files in these directories
+CMSIS/
+MCXW716C/
+board/
+component/
+device/
+drivers/
+freertos/
+startup/
+utilities/
+
+# --- Shell/batch scripts (optional: ignore if not modifying them) ---
+build_*.sh
+build_*.bat
+clean.*
+
