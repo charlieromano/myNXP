@@ -27,13 +27,13 @@ set(EXECUTABLE_OUTPUT_PATH ${ProjDirPath}/${CMAKE_BUILD_TYPE})
 set(LIBRARY_OUTPUT_PATH ${ProjDirPath}/${CMAKE_BUILD_TYPE})
 
 
-project(freertos_hello)
+project(gpio_led_output)
 
 enable_language(ASM)
 
 set(MCUX_BUILD_TYPES debug release)
 
-set(MCUX_SDK_PROJECT_NAME freertos_hello.elf)
+set(MCUX_SDK_PROJECT_NAME gpio_led_output.elf)
 
 if (NOT DEFINED SdkRootDirPath)
 SET(SdkRootDirPath ${ProjDirPath}/)
@@ -52,19 +52,15 @@ add_executable(${MCUX_SDK_PROJECT_NAME}
 "${ProjDirPath}/board/hardware_init.c"
 "${ProjDirPath}/board/pin_mux.c"
 "${ProjDirPath}/board/pin_mux.h"
-"${ProjDirPath}/source/FreeRTOSConfig_Gen.h"
-"${ProjDirPath}/src/main.c"
-"${ProjDirPath}/src/hello_task.c"
+"${ProjDirPath}/source/gpio_led_output.c"
 "${ProjDirPath}/source/mcux_config.h"
 )
 
 target_include_directories(${MCUX_SDK_PROJECT_NAME} PRIVATE
 ${ProjDirPath}/source
 ${ProjDirPath}/board
-${ProjDirPath}/inc
 )
 
-set_source_files_properties("${ProjDirPath}/source/FreeRTOSConfig_Gen.h" PROPERTIES COMPONENT_CONFIG_FILE "middleware_freertos-kernel_config")
 
 include(${ProjDirPath}/all_lib_device.cmake)
 
@@ -79,9 +75,9 @@ target_link_libraries(${MCUX_SDK_PROJECT_NAME} PRIVATE ${TARGET_LINK_SYSTEM_LIBR
 TARGET_LINK_LIBRARIES(${MCUX_SDK_PROJECT_NAME} PRIVATE -Wl,--end-group)
 
 ADD_CUSTOM_COMMAND(TARGET ${MCUX_SDK_PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_OBJCOPY}
--Obinary ${EXECUTABLE_OUTPUT_PATH}/${MCUX_SDK_PROJECT_NAME} ${EXECUTABLE_OUTPUT_PATH}/freertos_hello.bin)
+-Obinary ${EXECUTABLE_OUTPUT_PATH}/${MCUX_SDK_PROJECT_NAME} ${EXECUTABLE_OUTPUT_PATH}/gpio_led_output.bin)
 
-set_target_properties(${MCUX_SDK_PROJECT_NAME} PROPERTIES ADDITIONAL_CLEAN_FILES "output.map;${EXECUTABLE_OUTPUT_PATH}/freertos_hello.bin")
+set_target_properties(${MCUX_SDK_PROJECT_NAME} PROPERTIES ADDITIONAL_CLEAN_FILES "output.map;${EXECUTABLE_OUTPUT_PATH}/gpio_led_output.bin")
 
 # wrap all libraries with -Wl,--start-group -Wl,--end-group to prevent link order issue
 group_link_libraries()
