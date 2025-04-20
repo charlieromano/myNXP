@@ -2,16 +2,16 @@
 #include "statemachine_AB.h"
 
 eSystemState_AB 	InitHandler_AB(void){ 
-	printf("State Machine Init...\n");
+	PRINTF("State Machine Init...\n");
 	return STATE_A; 
 }
 
 eSystemState_AB 	AtoBHandler(void){
-	printf("STATE_A;\n");
+	PRINTF("STATE_A;\n");
 	return STATE_B; 
 }
 eSystemState_AB 	BtoAHandler(void){ 
-	printf("STATE_B;\n");
+	PRINTF("STATE_B;\n");
 	return STATE_A; 
 }
 

@@ -1,13 +1,17 @@
 #ifndef STATEMACHINE_AB_H
 #define STATEMACHINE_AB_H
 
-#include "FreeRTOS.h"
-#include "FreeRTOSConfig.h"
-#include "board.h"
-#include "task.h"
-#include "semphr.h"		
-#include "queue.h"      
+#include <stdint.h>
 #include <stdio.h>
+#include "FreeRTOS.h"
+#include "task.h"
+#include "timers.h"
+#include "semphr.h"
+#include "queue.h"
+#include "board.h"
+#include "fsl_debug_console.h"
+
+#define QUEUE_MAX_LENGTH 10
 
 extern SemaphoreHandle_t xMutexUART;
 

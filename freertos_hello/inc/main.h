@@ -6,10 +6,11 @@
 #include "timers.h"
 #include "queue.h"
 #include "semphr.h"
-#include "fsl_debug_console.h"
 #include "board.h"
+#include "fsl_debug_console.h"
 
 #include "hello_task.h"
+#include "statemachine_AB.h"
 
 void BOARD_InitHardware(void);
 

@@ -9,12 +9,15 @@
  #include "main.h"
  
  TaskHandle_t helloTaskHandle = NULL;
+ TaskHandle_t xTaskStateMachineHandler_AB = NULL;
 
  int main(void)
  {
      BOARD_InitHardware();
-     if (xTaskCreate(hello_task, "Hello_task", configMINIMAL_STACK_SIZE + 100, NULL, 
-        configMAX_PRIORITIES - 1, &helloTaskHandle) != pdPASS)
+     if (xTaskCreate(hello_task, "Hello_task", 
+      configMINIMAL_STACK_SIZE + 100, NULL, tskIDLE_PRIORITY+2, 
+      &helloTaskHandle)
+      != pdPASS)
      {
          PRINTF("Task creation failed!.\r\n");
          while (1);
@@ -35,6 +38,22 @@
         perror("Error starting timer");
         return 1;
         }
+
+     // Create the queue
+      queueHandle_AB = xQueueCreate(QUEUE_MAX_LENGTH, sizeof(eSystemEvent_AB));
+      if (queueHandle_AB == NULL){
+         perror("Error creating queue");
+         return 1;
+      }
+
+      // Create the task 
+      if( xTaskCreate( vTaskAB, "State Machine using active object", 
+         configMINIMAL_STACK_SIZE + 100, NULL, tskIDLE_PRIORITY+2, 
+         &xTaskStateMachineHandler_AB) 
+         == pdFAIL ) {
+         perror("Error creating task");
+         return 1;
+      }
 
      /***********************************************************************/
      vTaskStartScheduler();
