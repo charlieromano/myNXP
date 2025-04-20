@@ -3,11 +3,14 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "timers.h"
+#include "queue.h"
+#include "semphr.h"
 #include "fsl_debug_console.h"
 #include "board.h"
+
 #include "hello_task.h"
 
-// Declare the task from another file
-void hello_task(void *pvParameters);
+void BOARD_InitHardware(void);
 
 #endif /* MAIN_H_ */
