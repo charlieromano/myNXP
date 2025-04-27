@@ -1,133 +1,115 @@
 #!/bin/bash
 
-# Function to handle errors
-error_exit() {
-    echo "$1" 1>&2
+# Function to check if a directory exists
+check_dir() {
+  if [[ ! -d "$1" ]]; then
+    echo "❌ Directory $1 does not exist."
     exit 1
+  fi
 }
 
-# Function to get project folder name
-get_project_folder() {
-    read -p "Enter the name of the project folder to refactor: " PROJECT_FOLDER
-    if [ ! -d "$PROJECT_FOLDER" ]; then
-        error_exit "Error: Project folder '$PROJECT_FOLDER' not found!"
-    fi
+# Function to update CMakeLists.txt
+update_cmake() {
+  local project_dir="$1"
+  local cmf="$project_dir/CMakeLists.txt"
+  local backup="$cmf.bak"
+
+  echo "⮕ Backing up CMakeLists.txt to $backup"
+  cp "$cmf" "$backup"
+
+  # Modify CMakeLists.txt to reflect changes in folder structure
+  echo "⮕ Updating CMakeLists.txt for new source structure"
+  sed -i -e 's|/source|/source/src|g' "$cmf"  # Adjust source path for .c files
+  sed -i -e 's|/source|/source/inc|g' "$cmf"  # Adjust include path for .h files
+
+  echo "⮕ CMakeLists.txt updated successfully"
 }
 
-# Function to check and move the main file
-move_main_file() {
-    MAIN_FILE="$PROJECT_FOLDER/$PROJECT_FOLDER.c"
-    if [ -f "$MAIN_FILE" ]; then
-        echo "Found main file: $MAIN_FILE"
-        mv "$MAIN_FILE" "$PROJECT_FOLDER/source/src/main.c" || error_exit "Failed to move main file"
-    else
-        error_exit "Error: Main C file '$MAIN_FILE' not found!"
-    fi
-}
-
-# Function to handle file movement and directory creation
-move_main_file() {
-    # Check if the main file exists in the project folder
-    if [ -f "$PROJECT_FOLDER/$PROJECT_FOLDER.c" ]; then
-        # Check if main.c already exists in the target location
-        if [ -f "$PROJECT_FOLDER/source/src/main.c" ]; then
-            echo "Warning: 'main.c' already exists in the destination folder."
-            read -p "Do you want to overwrite it? (y/n): " overwrite
-            if [ "$overwrite" == "y" ]; then
-                mv "$PROJECT_FOLDER/$PROJECT_FOLDER.c" "$PROJECT_FOLDER/source/src/main.c"
-                echo "Main file overwritten."
-            else
-                echo "Main file not moved. Please resolve the conflict manually."
-            fi
-        else
-            mv "$PROJECT_FOLDER/$PROJECT_FOLDER.c" "$PROJECT_FOLDER/source/src/main.c"
-            echo "Main file moved successfully."
-        fi
-    else
-        echo "Error: Main C file '$PROJECT_FOLDER/$PROJECT_FOLDER.c' not found!"
-        exit 1
-    fi
-}
-
-# Function to update the CMakeLists.txt to include the new structure
-update_cmake_lists() {
-    CMAKE_FILE="$PROJECT_FOLDER/CMakeLists.txt"
-
-    if [ ! -f "$CMAKE_FILE" ]; then
-        error_exit "Error: CMakeLists.txt file not found in the project folder."
-    fi
-
-    # Add include directories for source/inc
-    sed -i "/project(/a \\ninclude_directories(\${PROJECT_SOURCE_DIR}/source/inc)" "$CMAKE_FILE"
-    
-    # Add source files for source/src
-    sed -i "/project(/a \\nfile(GLOB SOURCES \${PROJECT_SOURCE_DIR}/source/src/*.c)" "$CMAKE_FILE"
-
-    # Add new target for executable
-    sed -i "/project(/a \\nadd_executable(\${PROJECT_NAME} \${SOURCES})" "$CMAKE_FILE"
-
-    echo "CMakeLists.txt has been updated successfully."
-}
-
-# Function to rollback the changes
-rollback_changes() {
-    echo "Rolling back the refactoring..."
-    mv "$PROJECT_FOLDER/source/src/main.c" "$PROJECT_FOLDER/$PROJECT_FOLDER.c"
-    mv "$PROJECT_FOLDER/source/src/"*.c "$PROJECT_FOLDER/"
-    mv "$PROJECT_FOLDER/source/inc/"*.h "$PROJECT_FOLDER/"
-    rmdir "$PROJECT_FOLDER/source/src" "$PROJECT_FOLDER/source/inc"
-    echo "Rollback completed."
-}
-
-# Main refactoring function
+# Function to refactor project by moving files
 refactor_project() {
-    get_project_folder
+  local project_dir="$1"
 
-    # Move main file and other files to the new structure
-    move_main_file
-    move_files
+  echo "⮕ Starting refactor for $project_dir"
+  check_dir "$project_dir/source"
+  check_dir "$project_dir/source/src"
+  check_dir "$project_dir/source/inc"
 
-    # Update CMakeLists.txt
-    update_cmake_lists
+  # Create src and inc directories
+  mkdir -p "$project_dir/source/src"
+  mkdir -p "$project_dir/source/inc"
 
-    # Final message
-    echo "Refactoring completed for '$PROJECT_FOLDER'."
+  # Move .c files to src
+  mv "$project_dir/source"/*.c "$project_dir/source/src/"
+
+  # Move .h files to inc
+  mv "$project_dir/source"/*.h "$project_dir/source/inc/"
+
+  echo "⮕ Refactor complete"
 }
 
-# Prompt for rollback or refactor
-echo "Do you want to (r)efactor or (b)ackup/rollback? (r/b)"
-read ACTION
-case $ACTION in
-    r|R)
-        refactor_project
-        ;;
-    b|B)
-        echo "Please provide the project folder name to rollback:"
-        get_project_folder
-        rollback_changes
-        ;;
-    *)
-        echo "Invalid option. Exiting."
-        exit 1
-        ;;
-esac
+# Function to rollback refactor
+rollback_refactor() {
+  local project_dir="$1"
 
-# After refactoring, prepare build folder and run cmake
-echo "Preparing build folder..."
-mkdir -p "$PROJECT_FOLDER/build"
+  echo "⮕ Starting rollback for $project_dir"
+  check_dir "$project_dir/source/src"
+  check_dir "$project_dir/source/inc"
 
-# Run cmake on the project
-echo "Running cmake..."
-cd "$PROJECT_FOLDER/build" || exit
-cmake .. || exit
+  # Move .c files back to source
+  mv "$project_dir/source/src"/*.c "$project_dir/source/"
 
-# Option to run make
-echo "Do you want to run 'make' now? (y/n)"
-read RUN_MAKE
-if [ "$RUN_MAKE" == "y" ]; then
-    make || exit
-    echo "Build completed."
+  # Move .h files back to source
+  mv "$project_dir/source/inc"/*.h "$project_dir/source/"
+
+  echo "⮕ Rollback complete"
+}
+
+# Main script
+echo "Welcome to the project refactor tool!"
+
+# Ask user for input: whether to refactor or rollback
+echo "Please choose an option:"
+echo "1. Refactor"
+echo "2. Rollback"
+read -p "Enter your choice [1/2]: " choice
+
+# Ask for the project directory
+read -p "Enter the project directory (relative path): " project_dir
+
+# Check that project directory exists
+check_dir "$project_dir"
+
+# Based on the user's choice, either refactor or rollback
+if [[ "$choice" -eq 1 ]]; then
+  echo "⮕ Proceeding with refactor"
+  refactor_project "$project_dir"
+  update_cmake "$project_dir"  # Update CMakeLists.txt for the refactored structure
+  echo "🎉 Refactor complete. Please regenerate build files and build your project manually if needed."
+elif [[ "$choice" -eq 2 ]]; then
+  echo "⮕ Proceeding with rollback"
+  rollback_refactor "$project_dir"
+  update_cmake "$project_dir"  # Update CMakeLists.txt for the original structure
+  echo "🎉 Rollback complete. Please regenerate build files and build your project manually if needed."
 else
-    echo "Build skipped."
+  echo "❌ Invalid option. Exiting."
+  exit 1
 fi
+
+# Regenerate CMake build files
+echo "⮕ Regenerating CMake build system…"
+mkdir -p "$project_dir/out/build/debug"
+cd "$project_dir/out/build/debug"
+cmake ../.. -DCMAKE_BUILD_TYPE=debug -G Ninja || {
+  echo "❌ CMake configure failed!"
+  exit 1
+}
+echo "✓ CMake configure OK"
+
+# Build the project
+echo "⮕ Building the project…"
+cmake --build . --target all || {
+  echo "❌ Build failed!"
+  exit 1
+}
+echo "🎉 Build succeeded!"
 
